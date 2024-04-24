@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<openssl/conf.h>
-#include <openssl/evp.h>
-#include <string.h>
+#include<openssl/evp.h>
+#include<string.h>
 
 int encrypt(unsigned char* text, int text_len, unsigned char* key, unsigned char* cipher)
 {
