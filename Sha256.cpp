@@ -1,41 +1,60 @@
-#include<iostream>
-#include<iomanip>
-#include<openssl/sha.h>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <openssl/evp.h>
 
-bool simpleSHA256(void* input, unsigned long length, unsigned char* md)
+bool computeHash(const std::string & unhashed, std::string & hashed)
 {
-    SHA256_CTX context;
-    if (!SHA256_Init(&context))
-        return false;
+    bool success = false;
 
-    if (!SHA256_Update(&context, (unsigned char*)input, length))
-        return false;
+    EVP_MD_CTX* context = EVP_MD_CTX_new();
 
-    if (!SHA256_Final(md, &context))
-        return false;
+    if (context != NULL)
+    {
+        if (EVP_DigestInit_ex(context, EVP_sha256(), NULL))
+        {
+            if (EVP_DigestUpdate(context, unhashed.c_str(), unhashed.length()))
+            {
+                unsigned char hash[EVP_MAX_MD_SIZE];
+                unsigned int lengthOfHash = 0;
 
-    return true;
+                if (EVP_DigestFinal_ex(context, hash, &lengthOfHash))
+                {
+                    std::stringstream ss;
+                    for (unsigned int i = 0; i < lengthOfHash; ++i)
+                    {
+                        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+                    }
+
+                    hashed = ss.str();
+                    success = true;
+                }
+            }
+        }
+
+        EVP_MD_CTX_free(context);
+    }
+
+    return success;
 }
 
-int main()
+int main(int, char**)
 {
-    std::string data = "Hello, World!"; // Sample data to hash
+    std::string pw1 = "password1", pw1hashed;
+    std::string pw2 = "password2", pw2hashed;
+    std::string pw3 = "password3", pw3hashed;
+    std::string pw4 = "password4", pw4hashed;
 
-    unsigned char md[SHA256_DIGEST_LENGTH]; // 32 bytes
+    computeHash(pw1, pw1hashed);
+    computeHash(pw2, pw2hashed);
+    computeHash(pw3, pw3hashed);
+    computeHash(pw4, pw4hashed);
 
-    if (!simpleSHA256((void*)data.c_str(), data.length(), md))
-    {
-        std::cerr << "Error hashing data\n";
-        return 1;
-    }
-
-    // Print the hashed data
-    std::cout << "SHA256 hash of \"" << data << "\":\n";
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
-    {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)md[i];
-    }
-    std::cout << std::endl;
+    std::cout << pw1hashed << std::endl;
+    std::cout << pw2hashed << std::endl;
+    std::cout << pw3hashed << std::endl;
+    std::cout << pw4hashed << std::endl;
 
     return 0;
 }
