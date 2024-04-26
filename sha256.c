@@ -2,6 +2,7 @@
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+#include <string.h>
 
 void sha256(const unsigned char *data, size_t len, unsigned char hash[SHA256_DIGEST_LENGTH]) {
     EVP_MD_CTX *mdctx;
@@ -27,6 +28,22 @@ int main() {
         printf("%02x", hash[i]);
     }
     printf("\n");
+
+    FILE *file = fopen("hashed.txt", "wb");
+    if (file == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+
+    // Write the hash to the file
+    if (fwrite(hash, sizeof(unsigned char), SHA256_DIGEST_LENGTH, file) != SHA256_DIGEST_LENGTH) {
+        perror("Error writing to file");
+        fclose(file);
+        return 1;
+    }
+
+    fclose(file);
+    printf("Hash written to file 'hashed.txt'\n");
 
     return 0;
 }
